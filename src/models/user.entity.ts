@@ -11,12 +11,14 @@ export class User {
   @Column({
     nullable: false,
     default: '',
+    unique: true,
   })
   username: string;
 
   @Column({
     nullable: false,
     default: '',
+    unique: true,
   })
   email: string;
 
