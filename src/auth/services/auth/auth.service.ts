@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from 'src/dto/users/createUser.dto';
 import { GetUserDto } from 'src/dto/users/getUser.dto';
 import { User } from 'src/models';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { ErrorCodes } from 'src/common/utils';
 
 @Injectable()
 export class AuthService {
@@ -17,15 +22,41 @@ export class AuthService {
   }
 
   async createUser(createUserDto: CreateUserDto) {
-    // Hash password
-    const password = await AuthService.generateHash(createUserDto.password);
-    const user = this.userRepository.create({ ...createUserDto, password });
-    await this.userRepository.save(user);
+    try {
+      // Hash password
+      const password = await AuthService.generateHash(createUserDto.password);
+      const user = this.userRepository.create({ ...createUserDto, password });
+      await this.userRepository.save(user);
+    } catch (error) {
+      if (error.code === ErrorCodes.DUPLICATE) {
+        // Duplicate username or email
+        throw new BadRequestException(error.message);
+      }
+
+      throw error;
+    }
   }
 
   async getUser(getUserDto: GetUserDto) {
-    return this.userRepository.findOne({
-      where: { email: getUserDto.email, password: getUserDto.password },
-    });
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email: getUserDto.email },
+      });
+      if (!user) {
+        throw new NotFoundException('Email not found');
+      }
+
+      const passwordMatched = await bcrypt.compare(
+        getUserDto.password,
+        user.password,
+      );
+      if (!passwordMatched) {
+        throw new BadRequestException('Invalid password');
+      }
+
+      return user;
+    } catch (error) {
+      throw error;
+    }
   }
 }

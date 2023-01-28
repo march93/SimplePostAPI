@@ -1,15 +1,13 @@
 import {
-  BadRequestException,
   Body,
   Controller,
-  InternalServerErrorException,
   Post,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from 'src/auth/services/auth/auth.service';
-import { ErrorCodes } from 'src/common/utils';
 import { CreateUserDto } from 'src/dto/users/createUser.dto';
+import { GetUserDto } from 'src/dto/users/getUser.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -22,13 +20,18 @@ export class AuthController {
       await this.authService.createUser(createUserDto);
       return { message: 'User created successfully' };
     } catch (error) {
-      if (error.code === ErrorCodes.DUPLICATE) {
-        // Duplicate username or email
-        throw new BadRequestException(error.message);
-      }
+      throw error;
+    }
+  }
 
-      // For all other server errors
-      throw new InternalServerErrorException(error.message);
+  @Post('login')
+  @UsePipes(ValidationPipe)
+  async loginUser(@Body() getUserDto: GetUserDto) {
+    try {
+      await this.authService.getUser(getUserDto);
+      return { token: 'success' };
+    } catch (error) {
+      throw error;
     }
   }
 }
