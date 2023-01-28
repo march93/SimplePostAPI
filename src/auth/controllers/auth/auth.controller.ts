@@ -1,8 +1,8 @@
 import {
+  BadRequestException,
   Body,
   Controller,
-  HttpException,
-  HttpStatus,
+  InternalServerErrorException,
   Post,
   UsePipes,
   ValidationPipe,
@@ -23,10 +23,12 @@ export class AuthController {
       return { message: 'User created successfully' };
     } catch (error) {
       if (error.code === ErrorCodes.DUPLICATE) {
-        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+        // Duplicate username or email
+        throw new BadRequestException(error.message);
       }
 
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      // For all other server errors
+      throw new InternalServerErrorException(error.message);
     }
   }
 }
