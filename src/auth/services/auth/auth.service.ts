@@ -20,7 +20,7 @@ export class AuthService {
     // Hash password
     const password = await AuthService.generateHash(createUserDto.password);
     const user = this.userRepository.create({ ...createUserDto, password });
-    return this.userRepository.save(user);
+    await this.userRepository.save(user);
   }
 
   async getUser(getUserDto: GetUserDto) {
