@@ -24,7 +24,21 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+NestJS API for a simple social media app. Utilizes MySQL as a data store
+
+## Prerequisites
+- Create `.env` file at root of project
+- Example of file contents
+```bash
+DB_HOST='localhost'
+DB_PORT=3306
+DB_USERNAME='mysql'
+DB_PASSWORD='simple123'
+DB_NAME='simple_post_db'
+API_PORT=3000
+API_NAME='simple_post_api'
+JWT_SECRET='secret'
+```
 
 ## Installation
 
@@ -35,39 +49,43 @@ $ yarn install
 ## Running the app
 
 ```bash
-# development
-$ yarn run start
+# Start up database with Docker
+$ docker-compose up
+```
 
-# watch mode
+```bash
+# Start up backend server in watch mode
 $ yarn run start:dev
+```
 
-# production mode
-$ yarn run start:prod
+## Endpoints
+
+```bash
+# POST /auth/register - register user
+BODY: { username: string, email: string, password: string }
+RESPONSE: { message: 'User successfully created' } - 201 Created
+
+# POST /auth/login - login user
+BODY: { email: string, password: string }
+RESPONSE: { token: 'JWT_Token' } - 200 OK
+
+# POST /posts - create post
+REQUEST HEADER: Bearer JWT_TOKEN
+BODY: { title: string, text: string }
+RESPONSE: { id: string, title: string, text: string } - 201 Created
+
+# DELETE /posts/:id - delete post
+REQUEST HEADER: Bearer JWT_TOKEN
+RESPONSE: 204 No Content
+
+# GET /posts - get user feed
+REQUEST HEADER: Bearer JWT_TOKEN
+RESPONSE: { id: string, title: string, text: string }[] - 200 OK
 ```
 
 ## Test
 
 ```bash
-# unit tests
-$ yarn run test
-
 # e2e tests
 $ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
 ```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
