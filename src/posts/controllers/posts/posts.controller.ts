@@ -49,4 +49,15 @@ export class PostsController {
       throw error;
     }
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  @HttpCode(200)
+  async getFeed(@Request() req) {
+    if (req.user.userId) {
+      return await this.postsService.getFeed(req.user.userId);
+    }
+
+    throw new UnauthorizedException();
+  }
 }

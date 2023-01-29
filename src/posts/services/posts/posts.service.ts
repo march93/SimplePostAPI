@@ -39,4 +39,12 @@ export class PostsService {
 
     await this.postRepository.delete(post);
   }
+
+  async getFeed(userId: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['posts'],
+    });
+    return user.posts;
+  }
 }
