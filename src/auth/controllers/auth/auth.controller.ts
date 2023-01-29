@@ -31,11 +31,12 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
+  @HttpCode(200)
   async login(@Request() req) {
     return this.authService.login(req.user);
   }
 
-  @Delete('delete/:email')
+  @Delete(':email')
   @HttpCode(204)
   async deleteUser(@Param('email') email: string) {
     try {

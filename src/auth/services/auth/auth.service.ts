@@ -4,8 +4,6 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Strategy } from 'passport-local';
-import { PassportStrategy } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/dto/users/createUser.dto';
@@ -16,13 +14,11 @@ import * as bcrypt from 'bcrypt';
 import { ErrorCodes } from '../../../common/utils';
 
 @Injectable()
-export class AuthService extends PassportStrategy(Strategy) {
+export class AuthService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private jwtService: JwtService,
-  ) {
-    super();
-  }
+  ) {}
 
   static async generateHash(password: string): Promise<string> {
     return await bcrypt.hash(password, 10);
