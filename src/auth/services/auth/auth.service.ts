@@ -2,8 +2,12 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { Strategy } from 'passport-local';
+import { PassportStrategy } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/dto/users/createUser.dto';
 import { GetUserDto } from 'src/dto/users/getUser.dto';
 import { User } from '../../../models';
@@ -12,13 +16,20 @@ import * as bcrypt from 'bcrypt';
 import { ErrorCodes } from '../../../common/utils';
 
 @Injectable()
-export class AuthService {
+export class AuthService extends PassportStrategy(Strategy) {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
-  ) {}
+    private jwtService: JwtService,
+  ) {
+    super();
+  }
 
   static async generateHash(password: string): Promise<string> {
     return await bcrypt.hash(password, 10);
+  }
+
+  static async validatePassword(password: string, encrypted: string) {
+    return await bcrypt.compare(password, encrypted);
   }
 
   async createUser(createUserDto: CreateUserDto) {
@@ -37,27 +48,32 @@ export class AuthService {
     }
   }
 
-  async getUser(getUserDto: GetUserDto) {
-    try {
-      const user = await this.userRepository.findOne({
-        where: { email: getUserDto.email },
-      });
-      if (!user) {
-        throw new NotFoundException('Email not found');
-      }
+  async validateUserId(userId: string) {
+    return this.userRepository.findOne({ where: { id: userId } });
+  }
 
-      const passwordMatched = await bcrypt.compare(
-        getUserDto.password,
-        user.password,
-      );
-      if (!passwordMatched) {
-        throw new BadRequestException('Invalid password');
-      }
-
-      return user;
-    } catch (error) {
-      throw error;
+  async validateUser(getUserDto: GetUserDto) {
+    const user = await this.userRepository.findOne({
+      where: { email: getUserDto.email },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Invalid email');
     }
+
+    if (
+      await AuthService.validatePassword(getUserDto.password, user.password)
+    ) {
+      return user;
+    }
+
+    return null;
+  }
+
+  async login(user: User) {
+    const payload = { userId: user.id };
+    return {
+      token: this.jwtService.sign(payload),
+    };
   }
 
   // For clearing users when testing

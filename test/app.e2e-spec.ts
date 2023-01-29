@@ -7,6 +7,7 @@ import { AuthService } from '../src/auth/services/auth/auth.service';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../src/models';
+import { JwtService } from '@nestjs/jwt';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -16,6 +17,7 @@ describe('AppController (e2e)', () => {
       imports: [AppModule],
       providers: [
         AuthService,
+        JwtService,
         {
           provide: getRepositoryToken(User),
           useValue: Repository<User>,

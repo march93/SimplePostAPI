@@ -5,12 +5,14 @@ import {
   HttpCode,
   Param,
   Post,
+  Request,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from '../../services/auth/auth.service';
 import { CreateUserDto } from '../../../dto/users/createUser.dto';
-import { GetUserDto } from '../../../dto/users/getUser.dto';
+import { LocalAuthGuard } from '../../services/guards/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -27,15 +29,10 @@ export class AuthController {
     }
   }
 
+  @UseGuards(LocalAuthGuard)
   @Post('login')
-  @UsePipes(ValidationPipe)
-  async loginUser(@Body() getUserDto: GetUserDto) {
-    try {
-      await this.authService.getUser(getUserDto);
-      return { token: 'success' };
-    } catch (error) {
-      throw error;
-    }
+  async login(@Request() req) {
+    return this.authService.login(req.user);
   }
 
   @Delete('delete/:email')
