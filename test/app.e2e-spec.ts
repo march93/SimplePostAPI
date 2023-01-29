@@ -187,5 +187,43 @@ describe('AppController (e2e)', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(204);
     });
+
+    it('(GET) /posts - get feed', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/register')
+        .send(mockedPostUserParams)
+        .expect(201);
+
+      let response = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: mockedPostUserParams.email,
+          password: mockedPostUserParams.password,
+        })
+        .expect(200);
+
+      const token = response.body.token;
+
+      await request(app.getHttpServer())
+        .post('/posts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'title', text: 'text' })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .post('/posts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'wow', text: 'nice' })
+        .expect(201);
+
+      await request(app.getHttpServer()).get('/posts').expect(401);
+
+      response = await request(app.getHttpServer())
+        .get('/posts')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      return expect(response.body.length).toEqual(2);
+    });
   });
 });
