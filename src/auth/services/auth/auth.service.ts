@@ -74,17 +74,13 @@ export class AuthService {
 
   // For clearing users when testing
   async deleteUserByEmail(email: string) {
-    try {
-      const user = await this.userRepository.findOne({
-        where: { email: email },
-      });
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      await this.userRepository.delete(user);
-    } catch (error) {
-      throw error;
+    const user = await this.userRepository.findOne({
+      where: { email: email },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
+
+    await this.userRepository.delete(user);
   }
 }

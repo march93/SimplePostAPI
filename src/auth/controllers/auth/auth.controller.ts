@@ -39,10 +39,6 @@ export class AuthController {
   @Delete(':email')
   @HttpCode(204)
   async deleteUser(@Param('email') email: string) {
-    try {
-      await this.authService.deleteUserByEmail(email);
-    } catch (error) {
-      throw error;
-    }
+    await this.authService.deleteUserByEmail(email);
   }
 }
