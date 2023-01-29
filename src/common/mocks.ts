@@ -6,6 +6,12 @@ export const mockedUserParams = {
   password: 'password',
 };
 
+export const mockedPostUserParams = {
+  username: 'testing',
+  email: 'testing@test.com',
+  password: 'password',
+};
+
 export const mockedUser = (params: {
   username: string;
   email: string;

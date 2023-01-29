@@ -2,8 +2,10 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/dto/users/createUser.dto';
 import { GetUserDto } from 'src/dto/users/getUser.dto';
 import { User } from '../../../models';
@@ -15,10 +17,15 @@ import { ErrorCodes } from '../../../common/utils';
 export class AuthService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private jwtService: JwtService,
   ) {}
 
   static async generateHash(password: string): Promise<string> {
     return await bcrypt.hash(password, 10);
+  }
+
+  static async validatePassword(password: string, encrypted: string) {
+    return await bcrypt.compare(password, encrypted);
   }
 
   async createUser(createUserDto: CreateUserDto) {
@@ -37,42 +44,43 @@ export class AuthService {
     }
   }
 
-  async getUser(getUserDto: GetUserDto) {
-    try {
-      const user = await this.userRepository.findOne({
-        where: { email: getUserDto.email },
-      });
-      if (!user) {
-        throw new NotFoundException('Email not found');
-      }
+  async validateUserId(userId: string) {
+    return this.userRepository.findOne({ where: { id: userId } });
+  }
 
-      const passwordMatched = await bcrypt.compare(
-        getUserDto.password,
-        user.password,
-      );
-      if (!passwordMatched) {
-        throw new BadRequestException('Invalid password');
-      }
-
-      return user;
-    } catch (error) {
-      throw error;
+  async validateUser(getUserDto: GetUserDto) {
+    const user = await this.userRepository.findOne({
+      where: { email: getUserDto.email },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Invalid email');
     }
+
+    if (
+      await AuthService.validatePassword(getUserDto.password, user.password)
+    ) {
+      return user;
+    }
+
+    return null;
+  }
+
+  async login(user: User) {
+    const payload = { userId: user.id };
+    return {
+      token: this.jwtService.sign(payload),
+    };
   }
 
   // For clearing users when testing
   async deleteUserByEmail(email: string) {
-    try {
-      const user = await this.userRepository.findOne({
-        where: { email: email },
-      });
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      await this.userRepository.delete(user);
-    } catch (error) {
-      throw error;
+    const user = await this.userRepository.findOne({
+      where: { email: email },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
+
+    await this.userRepository.delete(user);
   }
 }
